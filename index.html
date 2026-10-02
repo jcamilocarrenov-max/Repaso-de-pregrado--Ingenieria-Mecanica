@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ME/REVIEW — Sesiones de Estudio de Ingeniería Mecánica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#160000;
+  --bg-panel:#1e0808;
+  --ink:#fff0eb;
+  --ink-dim:rgba(255,240,235,.55);
+  --ink-faint:rgba(255,240,235,.28);
+  --line:rgba(255,240,235,.16);
+  --brass:#ffea2f;
+  --red:#E92525;
+  --amber:#EBBC3F;
+  --blue:#4797D9;
+  --violet:#985FDE;
+  --serif:'IBM Plex Sans',-apple-system,sans-serif;
+  --mono:'IBM Plex Mono','SF Mono',Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+::selection{background:var(--brass);color:#160000}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:var(--serif);font-size:16px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+#field{position:fixed;inset:0;z-index:0;pointer-events:none;transition:opacity .6s ease}
+body.menu-open #field{opacity:.15}
+
+/* ---------- header ---------- */
+header{
+  position:fixed;top:0;left:0;right:0;height:56px;z-index:40;
+  display:flex;align-items:stretch;
+  border-bottom:1px solid var(--line);
+  background:rgba(22,0,0,.82);backdrop-filter:blur(10px);
+}
+.brand{
+  display:flex;align-items:center;padding:0 20px;
+  border-right:1px solid var(--line);flex:0 0 auto;
+  font-family:var(--mono);font-size:13px;letter-spacing:.18em;
+  text-transform:uppercase;text-decoration:none;color:var(--ink);
+}
+.brand em{color:var(--brass);font-style:normal}
+.console{
+  flex:1;display:flex;align-items:center;padding:0 20px;
+  font-family:var(--mono);font-size:12px;color:var(--ink-dim);
+  white-space:nowrap;overflow:hidden;
+}
+.console .caret{display:inline-block;width:8px;height:14px;background:var(--brass);margin-left:4px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.audio-toggle{
+  flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:0 20px;
+  border-left:1px solid var(--line);background:none;border-top:none;border-bottom:none;border-right:none;
+  color:var(--ink);font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  cursor:pointer;transition:color .2s ease;
+}
+.audio-toggle:hover{color:var(--brass)}
+.eq-bars{display:flex;align-items:flex-end;gap:2px;height:16px}
+.eq-bars i{width:3px;background:var(--brass);height:4px;transition:height .3s}
+.audio-toggle.playing .eq-bars i{animation:eq .9s ease-in-out infinite}
+.audio-toggle.playing .eq-bars i:nth-child(2){animation-delay:.15s}
+.audio-toggle.playing .eq-bars i:nth-child(3){animation-delay:.3s}
+.audio-toggle.playing .eq-bars i:nth-child(4){animation-delay:.45s}
+@keyframes eq{0%,100%{height:4px}50%{height:16px}}
+
+/* ---------- sidebar ---------- */
+aside{
+  position:fixed;top:56px;left:0;bottom:0;width:264px;z-index:30;
+  border-right:1px solid var(--line);
+  background:rgba(22,0,0,.82);backdrop-filter:blur(10px);
+  display:flex;flex-direction:column;
+}
+.aside-label{
+  padding:22px 20px 12px;font-family:var(--mono);font-size:10px;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--ink-faint);
+}
+nav{flex:1;overflow-y:auto}
+nav a{
+  display:flex;align-items:baseline;gap:12px;padding:11px 20px;
+  text-decoration:none;color:var(--ink-dim);
+  border-top:1px solid transparent;position:relative;
+  transition:color .2s ease,padding-left .25s ease;
+}
+nav a .num{font-family:var(--mono);font-size:10px;color:var(--ink-faint);transition:color .2s}
+nav a .t{font-size:15px;font-weight:500}
+nav a:hover{color:var(--brass);padding-left:26px}
+nav a:hover .num{color:var(--brass)}
+nav a.active{color:var(--brass)}
+nav a.active .num{color:var(--brass)}
+nav a.active::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--brass);
+}
+.aside-foot{
+  border-top:1px solid var(--line);padding:16px 20px;
+  font-family:var(--mono);font-size:10px;line-height:1.8;
+  color:var(--ink-faint);letter-spacing:.08em;
+}
+
+/* ---------- main ---------- */
+main{position:relative;z-index:1;margin-left:264px;padding:56px 0 0}
+.panel{display:none;padding:56px clamp(24px,5vw,72px) 90px;animation:panelin .5s ease both}
+.panel.show{display:block}
+@keyframes panelin{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.kicker{
+  font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--brass);margin-bottom:14px;display:flex;align-items:center;gap:12px;
+}
+.kicker::after{content:'';flex:0 0 60px;height:1px;background:var(--brass)}
+h1.panel-title{
+  font-size:clamp(34px,4.6vw,58px);font-weight:600;line-height:1.05;
+  letter-spacing:-.02em;margin-bottom:18px;max-width:16ch;
+}
+.lede{color:var(--ink-dim);font-size:17px;max-width:64ch;margin-bottom:44px}
+.lede strong{color:var(--ink);font-weight:600}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line)}
+.cell{padding:28px;border-right:1px solid var(--line)}
+.cell:last-child{border-right:none}
+.cell.full{grid-column:1/-1;border-right:none;border-top:1px solid var(--line)}
+.cell h2{
+  font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ink-faint);margin-bottom:18px;font-weight:400;
+}
+.concepts{list-style:none}
+.concepts li{
+  padding:9px 0 9px 20px;position:relative;font-size:15px;color:var(--ink-dim);
+  border-bottom:1px dashed rgba(255,240,235,.1);
+}
+.concepts li:last-child{border-bottom:none}
+.concepts li::before{content:'▸';position:absolute;left:0;color:var(--brass);font-size:12px;top:11px}
+.concepts li b{color:var(--ink);font-weight:600}
+
+.eq{
+  font-family:var(--mono);font-size:15.5px;line-height:2;
+  padding:16px 18px;border-left:2px solid var(--line);margin-bottom:14px;
+  background:rgba(255,240,235,.03);overflow-x:auto;white-space:nowrap;
+}
+.eq .tag{
+  display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--ink-faint);margin-bottom:2px;
+}
+.eq .y{color:var(--brass)} .eq .r{color:#ff7a6e} .eq .b{color:#7db9e8} .eq .v{color:#c39bf0}
+.eq .c{color:var(--ink-dim)}
+
+.note{
+  margin-top:28px;padding:18px 20px;border:1px dashed rgba(255,234,47,.35);
+  font-family:var(--mono);font-size:12.5px;line-height:1.8;color:var(--ink-dim);
+}
+.note b{color:var(--brass);font-weight:500;letter-spacing:.12em;text-transform:uppercase;font-size:10.5px;display:block;margin-bottom:6px}
+
+.check{display:flex;flex-wrap:wrap;gap:0;margin-top:6px}
+.check span{
+  font-family:var(--mono);font-size:11.5px;color:var(--ink-dim);
+  padding:7px 0;flex:0 0 100%;
+}
+.check span::before{content:'☐ ';color:var(--brass)}
+
+/* hero / home panel */
+.hero{
+  min-height:calc(100vh - 56px);flex-direction:column;justify-content:center;
+  padding:80px clamp(24px,5vw,72px);
+}
+.panel.hero.show{display:flex}
+.hero .kicker{margin-bottom:22px}
+.hero h1{
+  font-size:clamp(44px,8vw,110px);font-weight:600;line-height:.98;letter-spacing:-.03em;
+  margin-bottom:28px;
+}
+.hero h1 .accent{color:var(--brass)}
+.hero p{max-width:60ch;color:var(--ink-dim);font-size:17px;margin-bottom:40px}
+.hero .meta{
+  display:flex;gap:0;border:1px solid var(--line);width:fit-content;flex-wrap:wrap;
+}
+.hero .meta div{padding:14px 22px;border-right:1px solid var(--line)}
+.hero .meta div:last-child{border-right:none}
+.hero .meta .n{font-family:var(--mono);font-size:22px;color:var(--brass)}
+.hero .meta .l{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
+.topic-index{margin-top:56px;border-top:1px solid var(--line)}
+.topic-index button{
+  all:unset;display:flex;align-items:baseline;gap:16px;width:100%;
+  padding:15px 4px;border-bottom:1px solid var(--line);cursor:pointer;
+  color:var(--ink-dim);transition:color .2s,padding-left .25s;box-sizing:border-box;
+}
+.topic-index button .num{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+.topic-index button .name{font-size:clamp(18px,2.4vw,26px);font-weight:500;flex:1}
+.topic-index button .arrow{font-family:var(--mono);color:var(--ink-faint);transition:transform .25s}
+.topic-index button:hover{color:var(--brass);padding-left:14px}
+.topic-index button:hover .arrow{transform:translateX(6px);color:var(--brass)}
+
+/* simulator */
+.sim-wrap{border:1px solid var(--line);margin-top:8px}
+.sim-head{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 16px;border-bottom:1px solid var(--line);
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);
+}
+#simCanvas{display:block;width:100%;height:300px;background:rgba(0,0,0,.25)}
+.sim-controls{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line)}
+.sim-controls label{padding:16px;border-right:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--ink-dim)}
+.sim-controls label:last-child{border-right:none}
+.sim-controls b{display:flex;justify-content:space-between;color:var(--ink);font-weight:500;margin-bottom:10px}
+.sim-controls b output{color:var(--brass)}
+input[type=range]{width:100%;accent-color:var(--brass);cursor:pointer}
+.sim-readout{
+  display:flex;gap:28px;padding:14px 16px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:12px;color:var(--ink-dim);flex-wrap:wrap;
+}
+.sim-readout b{color:var(--brass);font-weight:500}
+
+footer{
+  margin-left:264px;position:relative;z-index:1;
+  border-top:1px solid var(--line);padding:22px clamp(24px,5vw,72px);
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--ink-faint);
+  display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
+}
+
+/* mobile */
+@media(max-width:900px){
+  aside{
+    top:auto;bottom:0;left:0;right:0;width:auto;height:auto;
+    border-right:none;border-top:1px solid var(--line);
+  }
+  .aside-label,.aside-foot{display:none}
+  nav{display:flex;overflow-x:auto}
+  nav a{flex:0 0 auto;padding:12px 16px;border-top:none}
+  nav a.active::before{left:0;right:0;top:auto;bottom:0;width:auto;height:3px}
+  nav a .num{display:none}
+  main{margin-left:0;padding-bottom:70px}
+  footer{margin-left:0;padding-bottom:90px}
+  .grid{grid-template-columns:1fr}
+  .cell{border-right:none;border-bottom:1px solid var(--line)}
+  .cell:last-child{border-bottom:none}
+  .console{font-size:10px}
+  .sim-controls{grid-template-columns:1fr}
+  .sim-controls label{border-right:none;border-bottom:1px solid var(--line)}
+}
+</style>
+</head>
+<body>
+<canvas id="field"></canvas>
+
+<header>
+  <a class="brand" href="#" id="brandLink">ME<em>/</em>REVIEW</a>
+  <div class="console"><span id="consoleText"></span><span class="caret"></span></div>
+  <button class="audio-toggle" id="audioToggle" aria-label="Toggle jazz music">
+    <span class="eq-bars"><i></i><i></i><i></i><i></i></span>
+    <span id="audioLabel">Reproducir Jazz</span>
+  </button>
+</header>
+
+<aside>
+  <div class="aside-label">Temas · Semestre de Otoño</div>
+  <nav id="topicNav"></nav>
+  <div class="aside-foot">
+    ME/REVIEW v1.0<br>
+    NIVEL UNIVERSITARIO<br>
+    SESIÓN DE JAZZ · BUCLE DE 22s
+  </div>
+</aside>
+
+<main id="main"></main>
+
+<footer>
+  <span>ME/REVIEW — SESIONES DE ESTUDIO DE INGENIERÍA MECÁNICA</span>
+  <span>ECUACIONES EN UNIDADES SI · VERIFICA CON TUS NOTAS DEL CURSO</span>
+</footer>
+
+<audio id="jazz" src="jazz-loop.mp3" loop preload="auto"></audio>
+  
+<script>
+/* ============ CONTENT ============ */
+const TOPICS = [
+{
+id:'statics', num:'01', name:'Estática y Dinámica',
+kicker:'Mecánica de Ingeniería · Sesión 01',
+title:'Estática y Dinámica de Cuerpos Rígidos',
+lede:'La base de todo análisis mecánico. La estática pregunta <strong>qué mantiene una estructura en equilibrio</strong>; la dinámica pregunta <strong>cómo aceleran los cuerpos bajo fuerzas y momentos no equilibrados</strong>. Domina los diagramas de cuerpo libre (DCL) — son la gramática de cada curso subsiguiente.',
+concepts:[
+ '<b>Diagramas de cuerpo libre</b> — aislar el cuerpo, reemplazar soportes con reacciones',
+ '<b>Equilibrio</b> — ΣF = 0 y ΣM = 0 en 2D/3D, elementos de dos y tres fuerzas',
+ '<b>Armaduras y marcos</b> — método de nodos vs. método de secciones',
+ '<b>Fricción</b> — estática vs. cinética, movimiento inminente, cuñas y fricción de bandas',
+ '<b>Centroides y momentos de inercia</b> — teorema de ejes paralelos, áreas compuestas',
+ '<b>Cinemática</b> — movimiento rectilíneo/curvilíneo, movimiento relativo, marcos rotatorios',
+ '<b>Trabajo-energía e impulso-momento</b> — alternativas a la integración directa de F = ma',
+],
+equations:[
+ {tag:'Equilibrio plano', html:'<span class="c">Σ</span><span class="y">F<sub>x</sub></span> = 0&nbsp;&nbsp;&nbsp;<span class="c">Σ</span><span class="y">F<sub>y</sub></span> = 0&nbsp;&nbsp;&nbsp;<span class="c">Σ</span><span class="y">M<sub>O</sub></span> = 0'},
+ {tag:'Newton–Euler (cuerpo rígido)', html:'<span class="c">Σ</span><span class="y">F</span> = <span class="b">m</span><span class="y">a</span><sub>G</sub>&nbsp;&nbsp;&nbsp;<span class="c">Σ</span><span class="y">M<sub>G</sub></span> = <span class="b">I<sub>G</sub></span><span class="r">α</span>'},
+ {tag:'Principio de trabajo-energía', html:'<span class="y">T</span><sub>1</sub> + <span class="c">Σ</span><span class="y">U</span><sub>1→2</sub> = <span class="y">T</span><sub>2</sub>,&nbsp;&nbsp;<span class="y">T</span> = ½<span class="b">m</span><span class="y">v</span>² + ½<span class="b">I<sub>G</sub></span><span class="r">ω</span>²'},
+ {tag:'Fricción de bandas', html:'<span class="y">T</span><sub>2</sub> = <span class="y">T</span><sub>1</sub>·e<sup><span class="b">μ</span><span class="r">β</span></sup>'},
+],
+note:'Estrategia de examen: siempre comienza con el DCL. Si un problema tiene más incógnitas que ecuaciones de equilibrio, busca cuerpos adicionales o restricciones cinemáticas — esa es la señal de que es un problema de marcos/máquinas, no un problema de partículas.',
+checks:['Dibujar un DCL completo en menos de 2 minutos','Resolver una armadura por nodos Y por secciones','Aplicar trabajo-energía a un problema de montaña rusa / péndulo','Manejar fricción de Coulomb con movimiento inminente']
+},
+{
+id:'solids', num:'02', name:'Mecánica de Materiales',
+kicker:'Mecánica de Sólidos · Sesión 02',
+title:'Mecánica de Materiales',
+lede:'Cómo se desarrollan <strong>los esfuerzos y deformaciones internas</strong> en cuerpos deformables bajo cargas axiales, torsionales, de flexión y transversales — y cómo mantenerlos dentro de límites seguros. Los tres pilares: <strong>equilibrio, compatibilidad y ley constitutiva</strong> (Hooke).',
+concepts:[
+ '<b>Esfuerzo y deformación</b> — normal y cortante, real vs. ingenieril, efecto de Poisson',
+ '<b>Elementos axiales</b> — σ = P/A, deformación térmica, barras estáticamente indeterminadas',
+ '<b>Torsión</b> — ejes circulares, ángulo de giro, transmisión de potencia',
+ '<b>Flexión de vigas</b> — diagramas de cortante/momento, fórmula de flexión, módulo de sección',
+ '<b>Transformación de esfuerzos</b> — esfuerzos principales, cortante máximo, círculo de Mohr',
+ '<b>Criterios de falla</b> — von Mises y Tresca (dúctil), Rankine y Mohr-Coulomb (frágil)',
+ '<b>Pandeo</b> — fórmula de Euler para columnas, longitud efectiva, relación de esbeltez',
+],
+equations:[
+ {tag:'Ley de Hooke uniaxial', html:'<span class="y">σ</span> = <span class="b">E</span><span class="r">ε</span>&nbsp;&nbsp;&nbsp;<span class="y">τ</span> = <span class="b">G</span><span class="r">γ</span>,&nbsp;&nbsp;<span class="b">G</span> = <span class="b">E</span> / 2(1+<span class="b">ν</span>)'},
+ {tag:'Fórmula de flexión', html:'<span class="y">σ<sub>x</sub></span> = −<span class="y">M</span><span class="b">y</span> / <span class="b">I</span>'},
+ {tag:'Torsión en eje circular', html:'<span class="y">τ</span> = <span class="y">T</span><span class="b">ρ</span> / <span class="b">J</span>&nbsp;&nbsp;&nbsp;<span class="r">φ</span> = <span class="y">T</span><span class="b">L</span> / (<span class="b">GJ</span>)'},
+ {tag:'Esfuerzo equivalente de von Mises', html:'<span class="y">σ′</span> = √( ½[(<span class="y">σ</span>₁−<span class="y">σ</span>₂)² + (<span class="y">σ</span>₂−<span class="y">σ</span>₃)² + (<span class="y">σ</span>₃−<span class="y">σ</span>₁)²] )'},
+ {tag:'Pandeo de Euler', html:'<span class="y">P<sub>cr</sub></span> = <span class="r">π</span>²<span class="b">EI</span> / (<span class="b">K</span><span class="b">L</span>)²'},
+],
+note:'Vale la pena el esfuerzo con el círculo de Mohr: los esfuerzos principales, cortante máximo y esfuerzo en cualquier plano oblicuo surgen de una sola construcción. Para problemas de diseño, combínalo con von Mises — nunca compares un esfuerzo cortante directamente con una resistencia de fluencia a la tensión.',
+checks:['Dibujar DFC/DMF para cualquier carga de viga','Encontrar esfuerzos principales vía círculo de Mohr','Diseñar un eje para flexión + torsión combinada','Verificar estabilidad de columna con la condición extrema K correcta']
+},
+{
+id:'thermo', num:'03', name:'Termodinámica',
+kicker:'Ciencias Térmicas · Sesión 03',
+title:'Termodinámica de Ingeniería',
+lede:'La ciencia de <strong>la energía, sus transformaciones y su calidad</strong>. La Primera Ley es contabilidad; la Segunda Ley es dirección. Casi cada planta de energía, refrigerador y motor que analizarás es una combinación de <strong>cuatro procesos ideales</strong>.',
+concepts:[
+ '<b>Propiedades y estado</b> — intensivas vs. extensivas, sustancias puras, calidad x',
+ '<b>Primera Ley</b> — balances de energía en sistemas cerrados y de flujo estacionario (abiertos)',
+ '<b>Segunda Ley</b> — motores térmicos/refrigeradores, enunciados de Clausius y Kelvin-Planck',
+ '<b>Entropía</b> — relaciones T ds, eficiencia isentrópica, generación de entropía',
+ '<b>Gases ideales</b> — Pv = RT, c<sub>p</sub>/c<sub>v</sub>, procesos politrópicos',
+ '<b>Ciclos de potencia</b> — Carnot, Otto, Diesel, Brayton, Rankine (con recalentamiento/regeneración)',
+ '<b>Refrigeración</b> — ciclo de compresión de vapor, COP, fundamentos de psicrometría',
+],
+equations:[
+ {tag:'Primera Ley, flujo estacionario', html:'<span class="y">Q̇</span> − <span class="y">Ẇ</span> = <span class="b">ṁ</span>[ Δ<span class="y">h</span> + Δ(<span class="y">V</span>²/2) + <span class="b">g</span>Δ<span class="b">z</span> ]'},
+ {tag:'Segunda Ley, balance de entropía', html:'<span class="y">S<sub>gen</sub></span> = Δ<span class="y">S</span><sub>sys</sub> − <span class="c">Σ</span>(<span class="y">Q<sub>j</sub></span>/<span class="b">T<sub>j</sub></span>) ≥ 0'},
+ {tag:'Eficiencia de Carnot', html:'<span class="r">η</span><sub>Carnot</sub> = 1 − <span class="b">T<sub>L</sub></span> / <span class="b">T<sub>H</sub></span>'},
+ {tag:'Gas ideal isentrópico', html:'<span class="b">T</span><span class="b">v</span><sup><span class="r">k</span>−1</sup> = const,&nbsp;&nbsp;<span class="b">P</span><span class="b">v</span><sup><span class="r">k</span></sup> = const,&nbsp;&nbsp;<span class="r">k</span> = <span class="b">c<sub>p</sub></span>/<span class="b">c<sub>v</sub></span>'},
+ {tag:'Eficiencia ideal de Brayton', html:'<span class="r">η</span> = 1 − <span class="r">r<sub>p</sub></span><sup>−(<span class="r">k</span>−1)/<span class="r">k</span></sup>'},
+],
+note:'Las tablas de propiedades son tu instrumento — la mayoría de errores en exámenes provienen de identificar mal la región de fase (líquido comprimido vs. mezcla vs. sobrecalentado). Siempre verifica T contra T_sat a la P dada antes de usar relaciones de gas ideal.',
+checks:['Dibujar diagramas T-s y P-v para los cuatro ciclos estándar','Calcular η y trabajo neto de un ciclo Rankine con recalentamiento','Aplicar S_gen para probar/refutar un dispositivo propuesto','Usar eficiencia isentrópica en turbinas y compresores']
+},
+{
+id:'fluids', num:'04', name:'Mecánica de Fluidos',
+kicker:'Ciencias Térmicas · Sesión 04',
+title:'Mecánica de Fluidos',
+lede:'Los fluidos se deforman continuamente bajo esfuerzo cortante — ese solo hecho genera <strong>campos de presión, sustentación, arrastre y cada tubería en la Tierra</strong>. Piensa en volúmenes de control: balances de masa, momento y energía sobre una región, no sobre una partícula.',
+concepts:[
+ '<b>Estática de fluidos</b> — presión hidrostática, manometría, fuerzas en superficies sumergidas, flotabilidad',
+ '<b>Leyes de conservación</b> — continuidad, Bernoulli, momento lineal en volúmenes de control',
+ '<b>Análisis dimensional</b> — Pi de Buckingham, números de Reynolds y Mach, similitud',
+ '<b>Flujo interno</b> — laminar vs. turbulento, pérdidas de Darcy-Weisbach, diagrama de Moody',
+ '<b>Flujo externo</b> — capas límite, separación, coeficientes de sustentación y arrastre',
+ '<b>Navier-Stokes</b> — soluciones exactas (Couette, Poiseuille) y sus suposiciones',
+ '<b>Turbomaquinaria</b> — curvas de bomba/turbina, velocidad específica, cavitación (NPSH)',
+],
+equations:[
+ {tag:'Número de Reynolds', html:'<span class="y">Re</span> = <span class="b">ρVD</span> / <span class="b">μ</span>&nbsp;&nbsp;<span class="c">(tubería: laminar &lt; 2300 &lt; turbulento)</span>'},
+ {tag:'Bernoulli (estacionario, no viscoso, incompresible)', html:'<span class="y">P</span>/<span class="b">ρg</span> + <span class="y">V</span>²/2<span class="b">g</span> + <span class="b">z</span> = const'},
+ {tag:'Pérdida de carga de Darcy-Weisbach', html:'<span class="y">h<sub>f</sub></span> = <span class="r">f</span> (<span class="b">L</span>/<span class="b">D</span>) <span class="y">V</span>²/2<span class="b">g</span>'},
+ {tag:'Flujo de momento (VC)', html:'<span class="c">Σ</span><span class="y">F</span> = <span class="c">Σ</span><sub>salida</sub> <span class="b">ṁ</span><span class="y">V</span> − <span class="c">Σ</span><sub>entrada</sub> <span class="b">ṁ</span><span class="y">V</span>'},
+ {tag:'Fuerza de arrastre', html:'<span class="y">F<sub>D</sub></span> = ½ <span class="b">ρ</span> <span class="y">V</span>² <span class="b">A</span> <span class="r">C<sub>D</sub></span>'},
+],
+note:'Bernoulli es una ecuación de energía para flujo sin fricción a lo largo de una línea de corriente — no la apliques a través de bombas, turbinas o regiones con cortante significativo. Cuando las pérdidas importan, usa el Bernoulli extendido (ingenieril) con los términos h_f y h_bomba/h_turbina.',
+checks:['Dimensionar una red de tuberías usando el diagrama de Moody','Calcular la fuerza hidrostática en la cara de una compuerta/presa','Estimar el arrastre de un vehículo a partir de C_D y el área frontal','Seleccionar una bomba desde la intersección de la curva del sistema']
+},
+{
+id:'heat', num:'05', name:'Transferencia de Calor',
+kicker:'Ciencias Térmicas · Sesión 05',
+title:'Transferencia de Calor',
+lede:'La termodinámica te dice <strong>cuánta</strong> energía se mueve; la transferencia de calor te dice <strong>qué tan rápido</strong>. Tres mecanismos — conducción, convección, radiación — y la disciplina de construir <strong>redes de resistencia térmica</strong> para combinarlos.',
+concepts:[
+ '<b>Conducción</b> — ley de Fourier, placas/cilindros 1-D en estado estacionario, aletas, métodos transitorios agrupados y de Heisler',
+ '<b>Convección</b> — ley de enfriamiento de Newton, capas límite, correlaciones de Nusselt',
+ '<b>Radiación</b> — cuerpo negro, factores de forma, redes de superficies grises',
+ '<b>Grupos adimensionales</b> — Nu, Pr, Gr, Ra, número de Biot y cuándo es válido el análisis de parámetros agrupados',
+ '<b>Intercambiadores de calor</b> — métodos LMTD y ε-NTU, factores de ensuciamiento',
+ '<b>Ebullición y condensación</b> — regímenes, flujo crítico de calor (cualitativo)',
+],
+equations:[
+ {tag:'Ley de Fourier (1-D)', html:'<span class="y">q<sub>x</sub></span> = −<span class="b">kA</span> d<span class="y">T</span>/d<span class="b">x</span>'},
+ {tag:'Ley de enfriamiento de Newton', html:'<span class="y">q</span> = <span class="r">h</span> <span class="b">A</span> (<span class="y">T<sub>s</sub></span> − <span class="b">T<sub>∞</sub></span>)'},
+ {tag:'Stefan-Boltzmann', html:'<span class="y">q</span> = <span class="r">εσ</span><span class="b">A</span>(<span class="y">T<sub>s</sub></span>⁴ − <span class="b">T<sub>alrededores</sub></span>⁴)'},
+ {tag:'Concepto de resistencia térmica', html:'<span class="y">q</span> = Δ<span class="y">T</span> / <span class="c">Σ</span><span class="b">R<sub>th</sub></span>'},
+ {tag:'LMTD para intercambiadores de calor', html:'<span class="y">q</span> = <span class="b">UA</span> Δ<span class="y">T</span><sub>lm</sub>,&nbsp;&nbsp;Δ<span class="y">T</span><sub>lm</sub> = (Δ<span class="y">T</span>₁ − Δ<span class="y">T</span>₂)/ln(Δ<span class="y">T</span>₁/Δ<span class="y">T</span>₂)'},
+ {tag:'Criterio del número de Biot', html:'<span class="y">Bi</span> = <span class="r">h</span><span class="b">L<sub>c</sub></span>/<span class="b">k</span> &lt; 0.1 → capacitancia agrupada válida'},
+],
+note:'Las resistencias en serie se suman; en paralelo se combinan como resistores eléctricos. La habilidad más transferible de este curso es traducir una pared/tubería/intercambiador físico en su red de resistencias antes de tocar cualquier correlación.',
+checks:['Construir una red R de pared compuesta de 3 capas','Elegir la correlación de Nusselt correcta para un flujo dado','Analizar un intercambiador de contraflujo con ε-NTU','Decidir método agrupado vs. Heisler para un problema de enfriamiento rápido']
+},
+{
+id:'vibrations', num:'06', name:'Vibraciones y Control',
+kicker:'Dinámica · Sesión 06',
+title:'Vibraciones Mecánicas y Control',
+lede:'Cada máquina oscila; la pregunta es <strong>si la oscilación se desvanece o destruye la estructura</strong>. El sistema amortiguado de segundo orden a continuación es el átomo de este campo — la resonancia, transmisibilidad y estabilidad de retroalimentación crecen a partir de él.',
+concepts:[
+ '<b>Vibración libre</b> — frecuencia natural, relación de amortiguamiento ζ, decremento logarítmico',
+ '<b>Vibración forzada</b> — respuesta armónica, resonancia, factor de amplificación',
+ '<b>Desbalanceo rotatorio y excitación de base</b> — transmisibilidad, diseño de aislamiento',
+ '<b>Sistemas de múltiples GDL</b> — problema de autovalores, formas modales, ortogonalidad',
+ '<b>Análisis modal</b> — desacoplamiento, superposición, pruebas modales experimentales',
+ '<b>Control retroalimentado</b> — diagramas de bloques, Routh-Hurwitz, lugar de las raíces, sintonización PID',
+ '<b>Dominio de la frecuencia</b> — diagramas de Bode, márgenes de ganancia/fase, criterio de Nyquist',
+],
+equations:[
+ {tag:'Ecuación de movimiento 1 GDL', html:'<span class="b">m</span><span class="y">ẍ</span> + <span class="r">c</span><span class="y">ẋ</span> + <span class="b">k</span><span class="y">x</span> = <span class="y">F</span>(<span class="b">t</span>)'},
+ {tag:'Frecuencia natural y relación de amortiguamiento', html:'<span class="r">ω<sub>n</sub></span> = √(<span class="b">k</span>/<span class="b">m</span>)&nbsp;&nbsp;&nbsp;<span class="r">ζ</span> = <span class="r">c</span> / 2√(<span class="b">km</span>)'},
+ {tag:'Respuesta amortiguada (ζ < 1)', html:'<span class="y">x</span>(<span class="b">t</span>) = e<sup>−<span class="r">ζω<sub>n</sub></span><span class="b">t</span></sup>[ <span class="b">A</span>cos <span class="r">ω<sub>d</sub></span><span class="b">t</span> + <span class="b">B</span>sin <span class="r">ω<sub>d</sub></span><span class="b">t</span> ]'},
+ {tag:'Factor de amplificación', html:'<span class="y">M</span> = 1 / √( (1−<span class="r">r</span>²)² + (2<span class="r">ζr</span>)² ),&nbsp;&nbsp;<span class="r">r</span> = <span class="b">ω</span>/<span class="r">ω<sub>n</sub></span>'},
+ {tag:'Función de transferencia de lazo cerrado', html:'<span class="y">T</span>(<span class="b">s</span>) = <span class="v">G</span>(<span class="b">s</span>) / [1 + <span class="v">G</span>(<span class="b">s</span>)<span class="v">H</span>(<span class="b">s</span>)]'},
+],
+note:'Prueba el simulador en vivo a continuación: pon c cerca de cero y observa la resonancia; incrementa c más allá del amortiguamiento crítico (ζ = 1) y el sobrepaso desaparece. El mismo compromiso — velocidad vs. sobrepaso — guía cada sesión de sintonización PID en la industria.',
+checks:['Calcular ω_n y ζ a partir de datos medidos de decaimiento libre','Diseñar un aislador de vibraciones para una transmisibilidad dada','Verificar estabilidad con Routh-Hurwitz','Leer márgenes de ganancia/fase en un diagrama de Bode'],
+sim:true
+},
+{
+id:'design', num:'07', name:'Diseño de Máquinas',
+kicker:'Diseño y Manufactura · Sesión 07',
+title:'Diseño de Elementos de Máquinas',
+lede:'El diseño es <strong>análisis con un factor de seguridad</strong>. Este tema convierte la teoría de esfuerzos en decisiones: qué diámetro de eje, qué rodamiento, qué relación de engranajes, qué soldadura — y <strong>por qué no fallará por fatiga</strong> después de un millón de ciclos.',
+concepts:[
+ '<b>Proceso de diseño</b> — requisitos, iteración, códigos y normas (ISO/ASME/AGMA)',
+ '<b>Falla estática</b> — teorías dúctil (MSS/DE) vs. frágil, factor de seguridad',
+ '<b>Fatiga</b> — curvas S-N, modificadores de límite de resistencia, criterios de Goodman y Gerber',
+ '<b>Concentración de esfuerzos</b> — K<sub>t</sub> vs. K<sub>f</sub>, sensibilidad a la muesca',
+ '<b>Ejes y cuñas</b> — carga combinada, ecuación de ejes ASME, velocidades críticas',
+ '<b>Engranajes</b> — ecuación de flexión de Lewis, esfuerzo de contacto, metodología AGMA',
+ '<b>Rodamientos, pernos y soldaduras</b> — vida L10, precarga y diagramas de juntas, grupos de soldadura',
+],
+equations:[
+ {tag:'Criterio de fatiga de Goodman', html:'<span class="y">σ<sub>a</sub></span>/<span class="b">S<sub>e</sub></span> + <span class="y">σ<sub>m</sub></span>/<span class="b">S<sub>ut</sub></span> = 1/<span class="r">n</span>'},
+ {tag:'Límite de resistencia a la fatiga (Marin, acero)', html:'<span class="b">S<sub>e</sub></span> = <span class="r">k<sub>a</sub>k<sub>b</sub>k<sub>c</sub>k<sub>d</sub>k<sub>e</sub></span> · <span class="b">S<sub>e</sub></span>′'},
+ {tag:'Flexión de engranajes de Lewis', html:'<span class="y">σ</span> = <span class="y">W<sup>t</sup></span><span class="b">P<sub>d</sub></span> / (<span class="b">F</span> <span class="r">Y</span>)'},
+ {tag:'Vida nominal de rodamientos', html:'<span class="y">L</span><sub>10</sub> = (<span class="b">C</span>/<span class="y">P</span>)<sup><span class="r">p</span></sup>&nbsp;&nbsp;<span class="c">(p = 3 bolas, 10/3 rodillos)</span>'},
+],
+note:'La fatiga rige la mayoría de las fallas reales en máquinas — típicamente 80–90% de las fallas mecánicas en servicio. Una pieza que pasa el análisis estático aún puede agrietarse en un cuñero o filete. Siempre persigue primero las concentraciones de esfuerzos; K_f, no el esfuerzo nominal, escribe el obituario.',
+checks:['Aplicar factores de Marin a un eje rotatorio','Verificar una junta apernada para pérdida de precarga y separación','Dimensionar un par de engranajes rectos con la ecuación de Lewis','Seleccionar un rodamiento para la vida útil L10 objetivo']
+},
+{
+id:'materials', num:'08', name:'Materiales y Manufactura',
+kicker:'Diseño y Manufactura · Sesión 08',
+title:'Ciencia de Materiales y Manufactura',
+lede:'Las propiedades <strong>no son constantes — son consecuencias del procesamiento y la microestructura</strong>. Este tema conecta el diagrama hierro-carbono y la teoría de dislocaciones con la planta de producción: fundición, formado, maquinado, soldadura y rutas aditivas.',
+concepts:[
+ '<b>Estructura atómica y defectos</b> — sistemas cristalinos, dislocaciones, límites de grano',
+ '<b>Comportamiento mecánico</b> — regímenes elástico/plástico, endurecimiento por deformación, termofluencia, tenacidad a la fractura',
+ '<b>Diagramas de fase</b> — sistema Fe-C, transformaciones eutectoides, curvas TTT/CCT',
+ '<b>Tratamiento térmico</b> — recocido, normalizado, temple y revenido, templabilidad (Jominy)',
+ '<b>Mecanismos de endurecimiento</b> — solución sólida, precipitación, refinamiento de grano (Hall-Petch)',
+ '<b>Formado y maquinado</b> — laminado/forjado/extrusión, torneado y fresado, vida de herramienta (Taylor)',
+ '<b>Metodología de selección</b> — cartas de Ashby, índices de rendimiento M para diseño ligero y rígido',
+],
+equations:[
+ {tag:'Relación de Hall-Petch', html:'<span class="y">σ<sub>y</sub></span> = <span class="b">σ</span>₀ + <span class="r">k<sub>y</sub></span> <span class="b">d</span><sup>−1/2</sup>'},
+ {tag:'Esfuerzo-deformación real (Hollomon)', html:'<span class="y">σ<sub>t</sub></span> = <span class="b">K</span> <span class="r">ε<sub>t</sub></span><sup><span class="r">n</span></sup>'},
+ {tag:'Mecánica de fractura', html:'<span class="y">K<sub>I</sub></span> = <span class="r">Y</span><span class="y">σ</span>√(<span class="r">πa</span>) ≤ <span class="b">K<sub>IC</sub></span>'},
+ {tag:'Vida de herramienta de Taylor', html:'<span class="b">V</span><span class="y">T</span><sup><span class="r">n</span></sup> = <span class="b">C</span>'},
+ {tag:'Índice de viga rígida y ligera', html:'maximizar <span class="y">M</span> = <span class="b">E</span><sup>1/2</sup>/<span class="b">ρ</span>'},
+],
+note:'Lee el diagrama Fe-C como un mapa: 0.76% C eutectoide, línea crítica de 727 °C, ferrita-perlita-bainita-martensita como destinos fijados por la ruta de enfriamiento. Selección de Ashby: define el objetivo, escribe el índice de rendimiento, luego deja que la carta — no el hábito — elija el material.',
+checks:['Rastrear la microestructura de un acero desde su curva de enfriamiento','Explicar por qué el acero templado es duro pero frágil','Calcular el tiempo de maquinado y vida de herramienta para una operación de torneado','Usar una carta de Ashby para elegir un material para un panel ligero y rígido']
+}
+];
+
+/* ============ RENDER ============ */
+const nav = document.getElementById('topicNav');
+const main = document.getElementById('main');
+
+const homePanel = `
+<section class="panel hero" data-topic="home">
+  <div class="kicker">Sesiones de Estudio · Fuera de Horario</div>
+  <h1>Repaso de<br>Ingeniería <span class="accent">Mecánica</span></h1>
+  <p>Ocho materias principales del plan de estudios de ingeniería mecánica de pregrado, destiladas a lo que sobrevive al examen: las ecuaciones gobernantes, los modos de falla de tu razonamiento, y las comprobaciones que importan. Elige un tema — el jazz va por nuestra cuenta.</p>
+  <div class="meta">
+    <div><div class="n">08</div><div class="l">Temas</div></div>
+    <div><div class="n">30+</div><div class="l">Ecuaciones Clave</div></div>
+    <div><div class="n">56</div><div class="l">Conceptos Clave</div></div>
+    <div><div class="n">01</div><div class="l">Simulador en Vivo</div></div>
+  </div>
+  <div class="topic-index" id="topicIndex"></div>
+</section>`;
+
+function topicPanel(t){
+  return `
+<section class="panel" data-topic="${t.id}">
+  <div class="kicker">${t.kicker}</div>
+  <h1 class="panel-title">${t.title}</h1>
+  <p class="lede">${t.lede}</p>
+  <div class="grid">
+    <div class="cell">
+      <h2>Conceptos Clave</h2>
+      <ul class="concepts">${t.concepts.map(c=>`<li>${c}</li>`).join('')}</ul>
+    </div>
+    <div class="cell">
+      <h2>Ecuaciones Gobernantes</h2>
+      ${t.equations.map(e=>`<div class="eq"><span class="tag">${e.tag}</span>${e.html}</div>`).join('')}
+    </div>
+    ${t.sim ? `
+    <div class="cell full">
+      <h2>Laboratorio en Vivo — Respuesta de 1 GDL Amortiguado</h2>
+      <div class="sim-wrap">
+        <div class="sim-head"><span>x(t) vs t · vibración libre-base armónica, x₀ = 1, v₀ = 0</span><span>arrastra los controles para ajustar</span></div>
+        <canvas id="simCanvas"></canvas>
+        <div class="sim-controls">
+          <label><b>masa m <output id="om">5.0</output> kg</b><input type="range" id="rm" min="1" max="20" step="0.5" value="5"></label>
+          <label><b>rigidez k <output id="ok">200</output> N/m</b><input type="range" id="rk" min="20" max="1000" step="10" value="200"></label>
+          <label><b>amortiguamiento c <output id="oc">6.3</output> N·s/m</b><input type="range" id="rc" min="0" max="130" step="0.5" value="6.3"></label>
+        </div>
+        <div class="sim-readout">
+          <span>ω<sub>n</sub> = <b id="own">–</b> rad/s</span>
+          <span>f<sub>n</sub> = <b id="ofn">–</b> Hz</span>
+          <span>ζ = <b id="ozeta">–</b></span>
+          <span>régimen: <b id="oreg">–</b></span>
+        </div>
+      </div>
+    </div>` : ''}
+    <div class="cell full">
+      <h2>Autoevaluación antes del Examen</h2>
+      <div class="check">${t.checks.map(c=>`<span>${c}</span>`).join('')}</div>
+      <div class="note"><b>Nota de estudio</b>${t.note}</div>
+    </div>
+  </div>
+</section>`;
+}
+
+nav.innerHTML = `<a href="#" data-topic="home"><span class="num">00</span><span class="t">Resumen</span></a>` +
+  TOPICS.map(t=>`<a href="#" data-topic="${t.id}"><span class="num">${t.num}</span><span class="t">${t.name}</span></a>`).join('');
+
+main.innerHTML = homePanel + TOPICS.map(topicPanel).join('');
+
+document.getElementById('topicIndex').innerHTML =
+  TOPICS.map(t=>`<button data-topic="${t.id}"><span class="num">${t.num}</span><span class="name">${t.name}</span><span class="arrow">→</span></button>`).join('');
+
+/* ============ NAVIGATION + CONSOLE ============ */
+let simInited = false;
+const consoleEl = document.getElementById('consoleText');
+let typeTimer = null;
+function typeConsole(text){
+  clearTimeout(typeTimer);
+  consoleEl.textContent = '';
+  let i = 0;
+  (function step(){
+    if(i <= text.length){
+      consoleEl.textContent = text.slice(0, i++);
+      typeTimer = setTimeout(step, 18 + Math.random()*38);
+    }
+  })();
+}
+
+const panels = {};
+document.querySelectorAll('.panel').forEach(p=>panels[p.dataset.topic]=p);
+const navLinks = document.querySelectorAll('nav a');
+
+function show(id){
+  Object.values(panels).forEach(p=>p.classList.remove('show'));
+  panels[id].classList.add('show');
+  navLinks.forEach(a=>a.classList.toggle('active', a.dataset.topic===id));
+  const t = TOPICS.find(x=>x.id===id);
+  typeConsole(id==='home' ? '> sesión iniciada — selecciona un tema para comenzar el repaso_' : `> repasando ahora: ${t.num} / ${t.name.toLowerCase()} — ${t.kicker.toLowerCase()}`);
+  if(id==='vibrations') initSim();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+document.addEventListener('click', e=>{
+  const el = e.target.closest('[data-topic]');
+  if(el){ e.preventDefault(); show(el.dataset.topic); }
+});
+show('home');
+
+/* ============ PARTICLE FIELD ============ */
+const field = document.getElementById('field');
+const fctx = field.getContext('2d');
+let W,H,parts=[];
+const mouse = {x:-9999,y:-9999};
+function sizeField(){
+  const dpr = Math.min(devicePixelRatio||1, 2);
+  W = innerWidth; H = innerHeight;
+  field.width = W*dpr; field.height = H*dpr;
+  field.style.width = W+'px'; field.style.height = H+'px';
+  fctx.setTransform(dpr,0,0,dpr,0,0);
+  const n = Math.min(160, Math.floor(W*H/12000));
+  parts = Array.from({length:n},()=>({
+    x:Math.random()*W, y:Math.random()*H,
+    vx:(Math.random()-.5)*.22, vy:(Math.random()-.5)*.22,
+    r:Math.random()*1.6+.6
+  }));
+}
+addEventListener('resize', sizeField); sizeField();
+addEventListener('pointermove', e=>{mouse.x=e.clientX;mouse.y=e.clientY});
+addEventListener('pointerleave', ()=>{mouse.x=-9999;mouse.y=-9999});
+
+(function drawField(){
+  fctx.clearRect(0,0,W,H);
+  const R = W/9;
+  for(const p of parts){
+    const dx=p.x-mouse.x, dy=p.y-mouse.y, d=Math.hypot(dx,dy);
+    if(d<R && d>1){ const f=(1-d/R)*.5; p.vx+=dx/d*f; p.vy+=dy/d*f; }
+    p.vx*=.96; p.vy*=.96;
+    p.vx+=(Math.random()-.5)*.02; p.vy+=(Math.random()-.5)*.02;
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0)p.x+=W; if(p.x>W)p.x-=W; if(p.y<0)p.y+=H; if(p.y>H)p.y-=H;
+    fctx.fillStyle='rgba(255,234,47,.55)';
+    fctx.beginPath(); fctx.arc(p.x,p.y,p.r,0,7); fctx.fill();
+  }
+  /* faint connective lines */
+  fctx.strokeStyle='rgba(255,240,235,.05)';
+  for(let i=0;i<parts.length;i+=4){
+    const a=parts[i];
+    for(let j=i+4;j<Math.min(i+24,parts.length);j+=4){
+      const b=parts[j], d=Math.hypot(a.x-b.x,a.y-b.y);
+      if(d<110){ fctx.beginPath(); fctx.moveTo(a.x,a.y); fctx.lineTo(b.x,b.y); fctx.stroke(); }
+    }
+  }
+  requestAnimationFrame(drawField);
+})();
+
+/* ============ AUDIO ============ */
+const jazz = document.getElementById('jazz');
+const toggle = document.getElementById('audioToggle');
+const audioLabel = document.getElementById('audioLabel');
+jazz.volume = .55;
+toggle.addEventListener('click', async ()=>{
+  if(jazz.paused){
+    try{ await jazz.play(); toggle.classList.add('playing'); audioLabel.textContent='Pausar Jazz'; }
+    catch(err){ audioLabel.textContent='Tocar de Nuevo'; }
+  } else {
+    jazz.pause(); toggle.classList.remove('playing'); audioLabel.textContent='Reproducir Jazz';
+  }
+});
+
+/* ============ SDOF SIMULATOR ============ */
+function initSim(){
+  if(simInited){ return; }
+  simInited = true;
+  const cv = document.getElementById('simCanvas');
+  const cx = cv.getContext('2d');
+  const rm=document.getElementById('rm'), rk=document.getElementById('rk'), rc=document.getElementById('rc');
+  const om=document.getElementById('om'), ok=document.getElementById('ok'), oc=document.getElementById('oc');
+  const own=document.getElementById('own'), ofn=document.getElementById('ofn'), ozeta=document.getElementById('ozeta'), oreg=document.getElementById('oreg');
+  let t0 = performance.now();
+
+  function fit(){
+    const dpr = Math.min(devicePixelRatio||1,2);
+    cv.width = cv.clientWidth*dpr; cv.height = 300*dpr;
+    cx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  fit(); addEventListener('resize', fit);
+
+  function resp(t, wn, z){
+    if(z < 1){
+      const wd = wn*Math.sqrt(1-z*z);
+      return Math.exp(-z*wn*t)*(Math.cos(wd*t) + (z*wn/wd)*Math.sin(wd*t));
+    }
+    if(Math.abs(z-1) < 1e-6){ return Math.exp(-wn*t)*(1+wn*t); }
+    const s1 = -wn*(z - Math.sqrt(z*z-1)), s2 = -wn*(z + Math.sqrt(z*z-1));
+    return (s2*Math.exp(s1*t) - s1*Math.exp(s2*t))/(s2-s1);
+  }
+
+  function draw(now){
+    if(!document.querySelector('section[data-topic="vibrations"]').classList.contains('show')){
+      requestAnimationFrame(draw); return;
+    }
+    const m=+rm.value, k=+rk.value, c=+rc.value;
+    om.textContent=m.toFixed(1); ok.textContent=k; oc.textContent=c.toFixed(1);
+    const wn=Math.sqrt(k/m), z=c/(2*Math.sqrt(k*m));
+    own.textContent=wn.toFixed(2); ofn.textContent=(wn/2/Math.PI).toFixed(2); ozeta.textContent=z.toFixed(3);
+    oreg.textContent = z<1 ? 'subamortiguado' : (Math.abs(z-1)<0.01 ? 'críticamente amortiguado' : 'sobreamortiguado');
+    oreg.style.color = z<1 ? 'var(--brass)' : '#7db9e8';
+
+    const w=cv.clientWidth, h=300, mid=h/2, T=12; /* 12 s window */
+    const elapsed = ((now-t0)/1000) % (T*2);   /* auto-restart cycle */
+    cx.clearRect(0,0,w,h);
+
+    /* grid */
+    cx.strokeStyle='rgba(255,240,235,.08)'; cx.lineWidth=1;
+    for(let gx=0;gx<=w;gx+=w/12){cx.beginPath();cx.moveTo(gx,0);cx.lineTo(gx,h);cx.stroke();}
+    for(let gy=0;gy<=h;gy+=h/6){cx.beginPath();cx.moveTo(0,gy);cx.lineTo(w,gy);cx.stroke();}
+    /* axes + envelopes */
+    cx.strokeStyle='rgba(255,240,235,.25)';
+    cx.beginPath();cx.moveTo(0,mid);cx.lineTo(w,mid);cx.stroke();
+    if(z<1 && z>0){
+      cx.strokeStyle='rgba(71,151,217,.5)'; cx.setLineDash([5,5]);
+      for(const sgn of [1,-1]){
+        cx.beginPath();
+        for(let px=0;px<=w;px+=3){
+          const tt=px/w*T, amp=Math.exp(-z*wn*tt)*1.05;
+          const py=mid - sgn*amp*mid*.82;
+          px===0?cx.moveTo(px,py):cx.lineTo(px,py);
+        }
+        cx.stroke();
+      }
+      cx.setLineDash([]);
+    }
+    /* response */
+    cx.strokeStyle='#ffea2f'; cx.lineWidth=2; cx.beginPath();
+    for(let px=0;px<=w;px+=2){
+      const tt=px/w*T, x=resp(tt,wn,z);
+      const py=mid - x*mid*.82;
+      px===0?cx.moveTo(px,py):cx.lineTo(px,py);
+    }
+    cx.stroke();
+    /* moving marker */
+    const tt=Math.min(elapsed,T)/T*w;
+    const markerX=Math.min(elapsed,T);
+    const py=mid - resp(markerX,wn,z)*mid*.82;
+    cx.fillStyle='#ffea2f';
+    cx.beginPath();cx.arc(tt,py,4.5,0,7);cx.fill();
+    cx.strokeStyle='rgba(255,234,47,.4)';
+    cx.beginPath();cx.arc(tt,py,10,0,7);cx.stroke();
+    /* labels */
+    cx.fillStyle='rgba(255,240,235,.4)';
+    cx.font='10px IBM Plex Mono, monospace';
+    cx.fillText('+x₀', 8, 16); cx.fillText('0', 8, mid-6); cx.fillText('t → 12 s', w-58, h-8);
+    cx.fillText(`x(t) = e^(−ζωₙt)·[cos ω_d t + (ζωₙ/ω_d)·sin ω_d t]`, 8, h-8);
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+}
+</script>
+</body>
+</html>
